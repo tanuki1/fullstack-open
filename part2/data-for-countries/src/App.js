@@ -3,25 +3,46 @@ import axios from 'axios'
 
 
 const CountryInfo = ({ country }) => {
-  const countryLanguages = Object.values(country.languages).map(value => <li> {value} </li>)
-  const [weather, setWeather] = useState(undefined)
+  const countryLanguages = Object.values(country.languages).map(value => <li key={country.name.common}> {value} </li>)
+  const [weatherInfo, setWeather] = useState(undefined)
   const countryCapital = country.capital
+  const convertDegreeToCompassPoint = (degree) => {
+    const compassPoints = ["North", "North North East", "North East", "East North East", 
+                           "East", "East South East", "South East", "South South East",
+                           "South", "South South West", "South West", "West South West", 
+                           "West", "West North West", "North West", "North North West"];
+    const rawPosition = Math.floor((degree / 22.5) + 0.5);
+    const arrayPosition = (rawPosition % 16);
+    return compassPoints[arrayPosition];
+  };
+
   const getWeather = () => {
-    if (!weather) {
+    if (!weatherInfo) {
         return null
-    } 
+    }
+
     return (
       <>
         <h2>
           Weather in {countryCapital}
         </h2>
         <div>
-          temperature: {weather.main.temp} F
+          temperature: {weatherInfo.main.temp} F
+        </div>
+          current weather: {weatherInfo.weather[0].description}
+        <div>
+          <img
+            style={{marginTop:"20px"}}
+            src={"http://openweathermap.org/img/wn/"+weatherInfo.weather[0].icon+"@2x.png"} />
+          <div>
+            wind: {weatherInfo.wind.speed} mph 
+            direction {convertDegreeToCompassPoint(weatherInfo.wind.deg)}
+          </div>
         </div>
       </>
     )
   }
-  
+
   useEffect(() => {
     const params = {
       appid: process.env.REACT_APP_API_KEY,
@@ -34,7 +55,6 @@ const CountryInfo = ({ country }) => {
         setWeather(response.data)
       })
   }, [])
-  console.log(weather)
   return (
     <div>
       <h1>
@@ -98,7 +118,7 @@ const App = ()  => {
     if (filteredCountries.length <= 10 && filteredCountries.length > 1) {
       return (
       filteredCountries.map(value => 
-      <div> 
+      <div key={value.name.common}> 
         {value.name.common} 
         <button onClick={() => handleEvent(value)}>
           show
